@@ -1,0 +1,4 @@
+,Name,Wochenpraeferenz,AH,Gender,Ranking
+4,Julian,3,nein,m,8.0
+2,Julia,2,nein,w,9.0
+6,Paddi,3,ja,w,10.0
