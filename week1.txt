@@ -1,4 +1,5 @@
 ,Name,Wochenpraeferenz,AH,Gender,Ranking
-9,Feli,3,nein,w,10.0
-7,Hannah,3,nein,w,8.0
-2,Susi,1,ja,w,9.0
+7,Hannah,1,nein,nm,8.0
+2,Susi,1,ja,nm,9.0
+10,Paddi,1,ja,nm,10.0
+1,Charli,1,nein,nm,8.0
