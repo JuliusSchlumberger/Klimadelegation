@@ -112,7 +112,7 @@ def randomDrawer(A_Tier,AB_Tier, ABC_Tier,number_accred,n):
         # Resample short_list in case criterion (below) is not met
         short_list = A_Tier.sample(n=min(number_accred,len(A_Tier)), replace=False)
         # 1.1 Criterion can be reached
-        if len(short_list[short_list["Gender"] == "nm"]) >= math.ceil(number_accred/2) and len(short_list[short_list["AH"] == "ja"]) <= max(1,math.floor(number_accred * 2/5)):
+        if (len(short_list) == number_accred) and len(short_list[short_list["Gender"] == "nm"]) >= math.ceil(number_accred/2) and len(short_list[short_list["AH"] == "ja"]) <= max(1,math.floor(number_accred * 2/5)):
             print("Iteration step ", i, ": First Round - A_Tier satisfies requirements")
             short_list_final = short_list
             break
@@ -137,7 +137,7 @@ def randomDrawer(A_Tier,AB_Tier, ABC_Tier,number_accred,n):
                 temp = short_list.append(short_list_extended)
 
                 # 1.2.4.1 Criterion can be reached
-                if len(temp[temp["Gender"] == "nm"]) >= math.ceil(number_accred/2) and len(temp[temp["AH"] == "ja"]) <= max(1,math.floor(number_accred * 2/5)): 
+                if (len(temp) == number_accred) and len(temp[temp["Gender"] == "nm"]) >= math.ceil(number_accred/2) and len(temp[temp["AH"] == "ja"]) <= max(1,math.floor(number_accred * 2/5)): 
                     print("2nd Round: List was extended and does satisfy all global criteria.")
                     short_list_final = temp 
                     break
@@ -153,16 +153,13 @@ def randomDrawer(A_Tier,AB_Tier, ABC_Tier,number_accred,n):
                     # 1.2.4.2.3 Remove already selected entries from extended list
                     input_list_extended = pd.merge(ABC_Tier,short_list, indicator=True, how='outer').query('_merge=="left_only"').drop('_merge', axis=1)
 
-                    # 1.2.4.2.4 Sample entries from reduced extended list based on number of free spots
-                    short_list_extended = ABC_Tier.sample(n=additional_list, replace=False)
-
                     # 1.2.4.2.5 Use loop again to find criterion-satisfying choice from reduced extended list
                     for j in range(0,n):
-                        short_list_extended = ABC_Tier.sample(n=additional_list, replace=False)
+                        short_list_extended = input_list_extended.sample(n=additional_list, replace=False)
                         temp = short_list.append(short_list_extended)
 
                         # 1.2.4.2.5.1 Criterion can be reached
-                        if len(temp[temp["Gender"] == "nm"]) >= math.ceil(number_accred/2) and len(temp[temp["AH"] == "ja"]) <= max(1,math.floor(number_accred * 2/5)): 
+                        if (len(temp) == number_accred) and len(temp[temp["Gender"] == "nm"]) >= math.ceil(number_accred/2) and len(temp[temp["AH"] == "ja"]) <= max(1,math.floor(number_accred * 2/5)): 
                             print("3rd Round: List was extended and does satisfy all global criteria.")
                             short_list_final = temp 
                             break
@@ -191,15 +188,12 @@ else:
 flexible_week1 = week1_selection - len(rank_liste[rank_liste["Wochenpraeferenz"] == 1])
 
 week1_replacement_index = rank_liste[rank_liste["Wochenpraeferenz"] == 3].sample(n = flexible_week1, replace=False).index.tolist()
-print(week1_replacement_index)
-print(rank_liste)
+
 for k in range(len(week1_replacement_index)):
     print(k)
     rank_liste.iat[week1_replacement_index[k],1] = 1
 rank_liste.loc[(rank_liste["Wochenpraeferenz"] == 3),"Wochenpraeferenz"] = 2
-print(rank_liste)
-print(len(rank_liste[rank_liste["Wochenpraeferenz"] == 1]))
-print(len(rank_liste[rank_liste["Wochenpraeferenz"] == 2]))
+
 # rank_liste = rank_liste[]
 
 # Create tier_lists
@@ -219,12 +213,13 @@ for week in [1,2]:
         w1_A_tier = A_tier[A_tier["Wochenpraeferenz"] == week]
         w1_B_tier = B_tier[B_tier["Wochenpraeferenz"] == week]
         w1_C_tier = C_tier[C_tier["Wochenpraeferenz"] == week]
-
+        print(w1_C_tier)
         # Create different entry pools
         [w1_A_tier,w1_AB_tier,w1_ABC_tier] = ExtendedLists(w1_A_tier,w1_B_tier,w1_C_tier,number_accred[0])
 
         # Find optimum short lists
         week1 = randomDrawer(w1_A_tier,w1_AB_tier,w1_ABC_tier,number_accred[0],n)
+        week1.drop('Ranking',axis=1, inplace=True)
         week1.to_csv("week1.txt")
 
     else:
@@ -238,14 +233,20 @@ for week in [1,2]:
         w2_A_tier = A_tier[A_tier["Wochenpraeferenz"] == week]
         w2_B_tier = B_tier[B_tier["Wochenpraeferenz"] == week]
         w2_C_tier = C_tier[C_tier["Wochenpraeferenz"] == week]
+        print(w2_C_tier)
         
         # Create different entry pools
         [w2_A_tier,w2_AB_tier,w2_ABC_tier] = ExtendedLists(w2_A_tier,w2_B_tier,w2_C_tier,number_accred[1])
 
         # Find optimum short lists
         week2 = randomDrawer(w2_A_tier,w2_AB_tier,w2_ABC_tier,number_accred[1],n)
+        week2.drop('Ranking',axis=1, inplace=True)
         week2.to_csv("week2.txt")
-
+delegate_choices = week1.append(week2)
+rank_liste.drop('Ranking',axis=1, inplace=True)
+waitinglist = pd.merge(rank_liste,delegate_choices, indicator=True, how='outer').query('_merge=="left_only"').drop('_merge', axis=1)
+# waitinglist.drop('Ranking',axis=1, inplace=True)
+print(waitinglist)
 
 
 
